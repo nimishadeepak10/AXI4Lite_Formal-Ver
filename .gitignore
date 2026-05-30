@@ -1,0 +1,11 @@
+# SymbiYosys build artifacts
+axi4lite_bmc/
+axi4lite_prove/
+axi4lite_write/
+axi4lite_write_bmc/
+
+# Editor / OS
+.vscode/
+*.swp
+Thumbs.db
+Desktop.ini

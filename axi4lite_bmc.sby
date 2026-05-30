@@ -1,0 +1,16 @@
+[options]
+mode bmc
+depth 30
+wait on
+
+[engines]
+smtbmc
+
+[script]
+read -formal module_properties.sv
+read -formal axi4lite_slave.sv
+prep -top axi_lite_slave
+
+[files]
+axi4lite_slave.sv
+module_properties.sv
