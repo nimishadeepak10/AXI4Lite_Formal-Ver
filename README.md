@@ -94,3 +94,18 @@ Older runs may reference `axi4lite_write_bmc.sby` / `axi4lite_write.sby`. Use `a
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Publish to GitHub
+
+Git is initialized and the initial commit is on `main`. To create the repo and push (one-time login required):
+
+```powershell
+# Install GitHub CLI if needed (already installed on this machine)
+# winget install GitHub.cli
+
+gh auth login
+cd "C:\Users\Nimisha\AXI4Lite_Formal Ver"
+gh repo create AXI4Lite_Formal-Ver --public --source=. --remote=origin --push
+```
+
+Use your own repo name if you prefer. After push, the project is live at `https://github.com/<your-username>/AXI4Lite_Formal-Ver`.
