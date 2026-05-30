@@ -1,73 +1,43 @@
-# AXI4-Lite Slave — Formal Verification
+# AXI4-Lite Slave Formal Verification
 
-SystemVerilog AXI4-Lite slave controller verified with **SymbiYosys** (BMC + k-induction). Includes write and read paths, 27+ immediate assertions, and counterexample debug via GTKWave.
+This is a small formal verification project built around an AXI4-Lite slave in SystemVerilog. The design handles both write and read transactions over a single 32-bit memory word. I wrote properties to check AXI handshake rules, FSM behavior, write/read mutual exclusion, and that reads return the right data from memory.
 
-## Overview
+The flow uses SymbiYosys with OSS Yosys. Properties are written as immediate assertions (not concurrent SVA) because that is what the open source Yosys flow supports well. Both bounded model checking and unbounded k-induction proof pass.
 
-| Item | Detail |
-|------|--------|
-| DUT | `axi_lite_slave` — single 32-bit memory word |
-| Write | 4-state FSM; AW/W in any order |
-| Read | 2-state FSM; AR → RDATA from `mem` |
-| Properties | `module_properties.sv` (instantiated inside DUT) |
-| Tool | OSS CAD Suite — Yosys + SymbiYosys + Yices |
-| Status | **BMC depth 30: PASS** · **Unbounded prove: PASS** |
+## What's in the repo
 
-## Project structure
+- `axi4lite_slave.sv` - the DUT, with a write FSM (AW/W in any order) and a read FSM
+- `module_properties.sv` - assumptions, assertions, and cover points
+- `axi4lite_bmc.sby` - BMC run, depth 30
+- `axi4lite_prove.sby` - full prove (basecase + induction)
 
+Properties are instantiated inside the DUT. I tried `bind` first but Yosys dropped it as unused, so everything looked like it passed when it was not actually connected.
+
+## How to run
+
+You need OSS CAD Suite installed. On Windows, make sure both `bin` and `lib` are on your PATH, then from this folder:
+
+```powershell
+& "C:\oss-cad-suite\environment.ps1"
+sby -f axi4lite_bmc.sby
+sby -f axi4lite_prove.sby
 ```
-axi4lite_slave.sv      # DUT + properties instance
-module_properties.sv   # Assumptions, assertions, covers
-axi4lite_bmc.sby       # Bounded model check (depth 30)
-axi4lite_prove.sby     # Unbounded proof (basecase + induction)
-yosys_test/            # Small Yosys syntax experiments (optional)
-```
 
+If something fails, SymbiYosys writes a VCD trace you can open in GTKWave. The logfile tells you which assertion and which step failed.
 
-## Property summary
+## What gets checked
 
-Properties use **immediate assertions** (`always @(posedge ACLK) assert(...)`) because OSS Yosys does not fully support concurrent SVA. The *property thinking* is the same as industry formal tools.
+Roughly 27 assertions plus a few cover points. They cover things like:
 
-| Group | Count | Examples |
-|-------|-------|----------|
-| Master assumptions | 6 | AW/W/AR valid held; addr/data stable while stalled |
-| Write B channel | 6 | BVALID/BRESP stability, no write during B pending |
-| Write functional | 2 | BVALID ordering, mem update only on complete write |
-| Write FSM | 4 | Idle / GOT_AW / GOT_W / WAIT_B encoding |
-| Read R channel | 6 | RVALID/RRESP/RDATA stability, RDATA == mem |
-| Read FSM | 2 | RD_IDLE / RD_WAIT_R encoding |
-| Mutual exclusion | 2 | No AR during write; no AW/W during read |
-| Cover | 4 | Full write, B handshake, AR handshake, R handshake |
+- master holds AW/W/AR valid and stable while stalled
+- B and R response channels stay stable until the handshake completes
+- memory only updates after a full write
+- RDATA matches mem on a read
+- write and read do not overlap
+- FSM states match the ready/valid behavior you expect
 
-**Induction tip:** Stability checks use `$past(VALID && !READY)` in the antecedent so they apply during a **stall**, not on the first cycle `VALID` rises.
-
-## Design notes
-
-- **Properties are instantiated inside the DUT** — `bind` was dropped by Yosys as unused, which caused false PASS results earlier.
-- **Ready signals are combinational** (`always_comb`) to avoid same-cycle NBA timing holes between write/read FSMs.
-- **Mutual exclusion:** one transaction at a time; write channel has priority when both are requested at idle.
-- Address ports (`AWADDR`, `ARADDR`) are latched but not decoded — single-word slave only.
-
-## Legacy filenames
-
-Older runs may reference `axi4lite_write_bmc.sby` / `axi4lite_write.sby`. Use `axi4lite_bmc.sby` and `axi4lite_prove.sby` instead.
+One thing I learned during induction: stability checks need `$past(VALID && !READY)` in the condition, not just `VALID && !READY`, or the first cycle the response goes high looks like a failure even when the RTL is fine.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
-
-## Publish to GitHub
-
-Git is initialized and the initial commit is on `main`. To create the repo and push (one-time login required):
-
-```powershell
-# Install GitHub CLI if needed (already installed on this machine)
-# winget install GitHub.cli
-
-gh auth login
-cd "C:\Users\Nimisha\AXI4Lite_Formal Ver"
-gh repo create AXI4Lite_Formal-Ver --public --source=. --remote=origin --push
-# Or run: .\push_to_github.ps1
-```
-
-After push, the project will be at [github.com/nimishadeepak10/AXI4Lite_Formal-Ver](https://github.com/nimishadeepak10/AXI4Lite_Formal-Ver).
+MIT. See LICENSE file. Standard open source license so anyone can use or learn from the code without worrying about usage rights.
