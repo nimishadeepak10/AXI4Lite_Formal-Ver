@@ -23,45 +23,6 @@ axi4lite_prove.sby     # Unbounded proof (basecase + induction)
 yosys_test/            # Small Yosys syntax experiments (optional)
 ```
 
-## Prerequisites
-
-Install [OSS CAD Suite](https://github.com/YosysHQ/oss-cad-suite) and ensure **both** `bin` and `lib` are on `PATH`:
-
-```powershell
-& "C:\oss-cad-suite\environment.ps1"
-# Or manually:
-$env:PATH = "C:\oss-cad-suite\bin;C:\oss-cad-suite\lib;" + $env:PATH
-```
-
-Verify:
-
-```powershell
-yosys -V
-sby --version
-```
-
-## Run verification
-
-From the project root:
-
-```powershell
-# Bounded check (30 cycles from reset)
-sby -f axi4lite_bmc.sby
-
-# Unbounded proof (BMC basecase + k-induction)
-sby -f axi4lite_prove.sby
-```
-
-**PASS** → no `trace.vcd` generated.  
-**FAIL** → open the trace in GTKWave:
-
-```powershell
-gtkwave axi4lite_bmc\engine_0\trace.vcd
-# or for induction failures:
-gtkwave axi4lite_prove\engine_0\trace_induct.vcd
-```
-
-Check `logfile.txt` (or `logfile_induction.txt`) for the failing assertion line number.
 
 ## Property summary
 
