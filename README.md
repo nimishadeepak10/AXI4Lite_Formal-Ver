@@ -106,6 +106,7 @@ Git is initialized and the initial commit is on `main`. To create the repo and p
 gh auth login
 cd "C:\Users\Nimisha\AXI4Lite_Formal Ver"
 gh repo create AXI4Lite_Formal-Ver --public --source=. --remote=origin --push
+# Or run: .\push_to_github.ps1
 ```
 
-Use your own repo name if you prefer. After push, the project is live at `https://github.com/<your-username>/AXI4Lite_Formal-Ver`.
+After push, the project will be at [github.com/nimishadeepak10/AXI4Lite_Formal-Ver](https://github.com/nimishadeepak10/AXI4Lite_Formal-Ver).
